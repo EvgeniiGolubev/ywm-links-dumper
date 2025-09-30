@@ -2,3 +2,4 @@ requests>=2.32.3
 python-dotenv>=1.0.1
 tenacity>=9.0.0
 openpyxl>=3.1.5
+PyQt6>=6.7.1

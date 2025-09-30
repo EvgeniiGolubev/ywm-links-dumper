@@ -9,9 +9,9 @@
 - Сохранение в Excel (.xlsx).
 - Автоматическая генерация имени файла по шаблону  
   `<домен>_links_<YYYY-MM-DD>.xlsx`.
-- Подсветка строк с "плохими" доменами в `source_url` ⚠️ Важно: подсветка работает по простому поиску ключевых слов (например: `porn`, `xxx`, `casino`, `viagra`).
+- Подсветка строк с "плохими" доменами в `source_url` !Важно! Подсветка работает по простому поиску ключевых слов (например: `porn`, `xxx`, `casino`, `viagra`).
 
-⚠️ Ограничение API: **анкорные тексты ссылок не выдаются**. Доступны только:
+Ограничение API: **анкорные тексты ссылок не выдаются**. Доступны только:
 - `source_url` — страница-источник,
 - `destination_url` — страница вашего сайта,
 - `discovery_date` — дата, когда ссылка впервые обнаружена,
@@ -31,7 +31,7 @@
 
 3. Скопируйте .env.example → .env и заполните свои данные:
     ```bash
-    YWM_OAUTH_TOKEN=your_token
+    YWM_OAUTH_TOKEN=my_token
     YWM_HOST_DOMAIN=example.com
     YWM_LIMIT=100
     YWM_OFFSET=0
@@ -43,8 +43,8 @@
 2. В доступах укажите `webmaster:hostinfo`
 3. Сформируйте ссылку: 
 
-`https://oauth.yandex.ru/authorize?response_type=token&client_id=ВАШ_CLIENT_ID&scope=webmaster:hostinfo`
-4. Перейдите по ней, разрешите доступ, скопируйте `access_token` из адресной строки и вставьте его в `.env`.
+`https://oauth.yandex.ru/authorize?response_type=token&client_id=MY_CLIENT_ID&scope=webmaster:hostinfo`
+4. Перейдите по ней, разрешите доступ, скопируйте токен.
 
 ## Запуск
 `python src/dump_external_links.py`

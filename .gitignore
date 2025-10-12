@@ -1,7 +1,6 @@
 .idea/
 .venv/
 build/
-dist/
 .env
 __pycache__/
 *.pyc

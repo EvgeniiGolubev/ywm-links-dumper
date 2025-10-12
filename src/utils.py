@@ -33,7 +33,7 @@ def write_xlsx(rows: Iterable[Dict], out_dir: str, host_domain: str) -> str:
 
     return f"Файл сохранён: {out_path.resolve()}"
 
-def __make_file_name(host_domain):
+def __make_file_name(host_domain: str) -> str:
     today = datetime.today().strftime("%Y-%m-%d")
     safe_domain = host_domain.replace(":", "_")
     return f"{safe_domain}_links_{today}.xlsx"

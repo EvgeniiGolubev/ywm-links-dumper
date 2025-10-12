@@ -1,7 +1,9 @@
+import sys
 from pathlib import Path
 from typing import Optional
-
+from urllib.parse import urlparse
 from PyQt6.QtCore import QObject, pyqtSignal, QThread, Qt
+from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QWidget, QPushButton, QMainWindow, QLabel, QLineEdit, QVBoxLayout, \
     QFileDialog, QHBoxLayout, QPlainTextEdit, QSizePolicy, QProgressBar
 from src.api import YWMClient
@@ -68,6 +70,7 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("Dump external links")
         self.setMinimumSize(600, 400)
+        self.setWindowIcon(QIcon(self.__resource_path("assets/icon.ico")))
 
         out_dir_label = QLabel("Выберите, где будет располагаться итоговый файл:")
         self.out_dir_field = QLineEdit()
@@ -137,6 +140,14 @@ class MainWindow(QMainWindow):
         container.setLayout(vbox)
         self.setCentralWidget(container)
 
+    def __resource_path(self, relative_path: str) -> str:
+        if hasattr(sys, '_MEIPASS'):
+            # В режиме exe
+            return str(Path(sys._MEIPASS) / relative_path)
+        else:
+            # В режиме разработки
+            return str(Path(__file__).parent.parent / relative_path)
+
     def __choose_folder(self) -> None:
         folder = QFileDialog.getExistingDirectory(self, "Выбрать папку")
         if folder:
@@ -177,9 +188,24 @@ class MainWindow(QMainWindow):
         if self.out_dir:
             self.__set_env("YWM_OUTPUT_DIR", self.out_dir)
 
-        self.host_domain = self.host_domain_field.text().strip()
+        raw_host = self.host_domain_field.text().strip()
+        self.host_domain = self.__extract_domain(raw_host)
         if self.host_domain:
             self.__set_env("YWM_HOST_DOMAIN", self.host_domain)
+
+    def __extract_domain(self, value: str) -> str:
+        value = value.strip()
+
+        if not value.startswith(("http://", "https://")):
+            value = "http://" + value
+
+        parsed = urlparse(value)
+        domain = parsed.netloc or parsed.path
+
+        if domain.startswith("www."):
+            domain = domain[4:]
+
+        return domain
 
     def __set_env(self, key: str, value: str) -> None:
         try:

@@ -1,7 +1,7 @@
 import sys
 from PyQt6.QtWidgets import QApplication
-from ui import MainWindow
-from config import Settings
+from src.config import Settings
+from src.ui import MainWindow
 
 
 def main():

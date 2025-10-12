@@ -1,6 +1,6 @@
 from typing import Optional, Dict, Iterable, Callable
 import requests
-from constants import API_BASE
+from src.constants import API_BASE
 
 class YWMClient:
     def __init__(self, oauth_token: str):

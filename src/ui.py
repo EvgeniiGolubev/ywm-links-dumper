@@ -46,9 +46,12 @@ class Worker(QObject):
             self.log.emit(f"OK: host_id = {host_id}")
 
             self.log.emit(f"Выгружаем внешние ссылки: user_id={user_id} host_id={host_id} limit={self.limit} offset={self.offset}")
-            rows = api.iter_external_links(user_id, host_id, self.limit, self.offset)
+            rows = list(api.iter_external_links(user_id, host_id, self.limit, self.offset))
 
-            self.log.emit("Программа не зависла, просто много ссылок...")
+            if not rows:
+                self.log.emit("Ссылок не найдено.")
+                self.finished.emit("Выгрузка завершена без данных.")
+                return
 
             result = write_xlsx(rows, self.out_dir, self.host_domain)
             self.finished.emit(result)
@@ -58,17 +61,16 @@ class Worker(QObject):
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, oauth_token: Optional[str], out_dir: str, host_domain: Optional[str],
-                 limit: int, offset: int):
+    def __init__(self, settings: Settings):
         super().__init__()
+        self.settings = settings
+        self.oauth_token = self.settings.oauth_token
+        self.out_dir = self.settings.out_dir
+        self.host_domain = self.settings.host_domain
+        self.limit = self.settings.limit
+        self.offset = self.settings.offset
 
-        self.oauth_token = oauth_token
-        self.out_dir = out_dir
-        self.host_domain = host_domain
-        self.limit = limit
-        self.offset = offset
-
-        self.setWindowTitle("Dump external links")
+        self.setWindowTitle("YWM External Links")
         self.setMinimumSize(600, 400)
         self.setWindowIcon(QIcon(self.__resource_path("assets/icon.ico")))
 
@@ -161,6 +163,8 @@ class MainWindow(QMainWindow):
         self.__save_new_data()
 
         if not self.__check_fields():
+            self.progress_bar.setVisible(False)
+            self.run_button.setEnabled(True)
             return
 
         self.thread = QThread(self)
@@ -182,16 +186,16 @@ class MainWindow(QMainWindow):
     def __save_new_data(self) -> None:
         self.oauth_token = self.token_field.text().strip()
         if self.oauth_token:
-            self.__set_env("YWM_OAUTH_TOKEN", self.oauth_token)
+            self.__save_setting("YWM_OAUTH_TOKEN", self.oauth_token)
 
         self.out_dir = self.out_dir_field.text().strip()
         if self.out_dir:
-            self.__set_env("YWM_OUTPUT_DIR", self.out_dir)
+            self.__save_setting("YWM_OUTPUT_DIR", self.out_dir)
 
         raw_host = self.host_domain_field.text().strip()
         self.host_domain = self.__extract_domain(raw_host)
         if self.host_domain:
-            self.__set_env("YWM_HOST_DOMAIN", self.host_domain)
+            self.__save_setting("YWM_HOST_DOMAIN", self.host_domain)
 
     def __extract_domain(self, value: str) -> str:
         value = value.strip()
@@ -207,9 +211,9 @@ class MainWindow(QMainWindow):
 
         return domain
 
-    def __set_env(self, key: str, value: str) -> None:
+    def __save_setting(self, key: str, value: str) -> None:
         try:
-            Settings.save_env(key, value)
+            self.settings.save(key, value)
         except Exception as e:
             self.__add_log(f"Ошибка в сохранении настроек: {e}")
 

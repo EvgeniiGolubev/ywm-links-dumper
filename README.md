@@ -13,6 +13,7 @@
 - Подсветка строк с "плохими" доменами в `source_url` !Важно! Подсветка работает по простому поиску ключевых слов (например: `porn`, `xxx`, `casino`, `viagra`).
 - Графический интерфейс.
 - Возможность сборки в `.exe`
+- Автоматическое сохранение настроек в `Документах` пользователя (OAuth-токен, домен, путь вывода и лимиты выгрузки).
 
 Ограничение API: **анкорные тексты ссылок не выдаются**. Доступны только:
 - `source_url` — страница-источник,
@@ -20,7 +21,7 @@
 - `discovery_date` — дата, когда ссылка впервые обнаружена,
 - `source_last_access_date` — дата последней проверки источника.
 
-## Установка
+## Установка (для разработки)
 
 1. Клонируйте репозиторий и создайте виртуальное окружение:
    ```bash
@@ -32,14 +33,6 @@
     ```bash
     pip install -r requirements.txt
 
-3. Скопируйте .env.example → .env и заполните свои данные:
-    ```bash
-    YWM_OAUTH_TOKEN=my_token
-    YWM_HOST_DOMAIN=example.com
-    YWM_LIMIT=100
-    YWM_OFFSET=0
-    YWM_OUTPUT_DIR=C:/Users/User/Desktop/seo_reports
-
 ## Получение OAuth-токена
 
 1. Зарегистрируйте приложение в Яндекс.OAuth
@@ -50,11 +43,17 @@
 
 ## Запуск
 В режиме Python:
-`python dump_external_links.py`
+`python app.py`
 
 В виде собранного `.exe` (после сборки через PyInstaller):
-`dist/dump_external_links.exe`
+`dist/YWM_ExternalLinks.exe`
 
 После завершения работы скрипт создаст файл:
 
 `<YWM_OUTPUT_DIR>/<домен>_links_<YYYY-MM-DD>.xlsx`
+
+Настройки будут автоматически сохранены в:
+`C:\Users\<Имя>\Documents\YWM_ExternalLinks\settings.ini`
+
+## Сборка в .exe
+pyinstaller --noconsole --onefile --name YWM_ExternalLinks --icon=assets/icon.ico --add-data "assets/icon.ico;assets" app.py

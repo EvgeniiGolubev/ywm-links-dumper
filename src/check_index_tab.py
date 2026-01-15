@@ -1,7 +1,8 @@
-from PyQt6.QtCore import Qt
+from pathlib import Path
+from PyQt6.QtCore import Qt, QThread
 from PyQt6.QtWidgets import QWidget, QPlainTextEdit, QSizePolicy, QVBoxLayout, QPushButton, QProgressBar, QHBoxLayout, \
     QLabel, QLineEdit, QFileDialog
-
+from src.check_index_worker import CheckIndexWorker
 from src.config import Settings
 
 
@@ -68,12 +69,32 @@ class CheckIndexTab(QWidget):
 
     def __run(self) -> None:
         self.__add_log("Начинаем работу...")
-
         self.links_field.setReadOnly(True)
         self.run_button.setEnabled(False)
         self.progress_bar.setVisible(True)
 
         self.__save_new_output_dir()
+
+        if not self.__check_out_dir_field():
+            self.progress_bar.setVisible(False)
+            self.run_button.setEnabled(True)
+            return
+
+        self.thread = QThread(self)
+        self.worker = CheckIndexWorker(self.out_dir, self.__get_urls_from_field())
+        self.worker.moveToThread(self.thread)
+
+        self.thread.started.connect(self.worker.run)
+        self.worker.log.connect(self.__add_log)
+        self.worker.finished.connect(self.__on_worker_finished)
+        self.worker.error.connect(self.__on_worker_error)
+
+        self.worker.finished.connect(self.thread.quit)
+        self.worker.error.connect(self.thread.quit)
+        self.thread.finished.connect(self.worker.deleteLater)
+        self.thread.finished.connect(self.thread.deleteLater)
+
+        self.thread.start()
 
     def __choose_folder(self) -> None:
         folder = QFileDialog.getExistingDirectory(self, "Выбрать папку")
@@ -87,6 +108,44 @@ class CheckIndexTab(QWidget):
                 self.settings.save("YWM_OUTPUT_DIR", self.out_dir)
             except Exception as e:
                 self.__add_log(f"Ошибка в сохранении настроек: {e}")
+
+    def __check_out_dir_field(self) -> bool:
+        if not self.out_dir:
+            self.__add_log("Не задан путь к итоговому файлу!")
+            self.progress_bar.setVisible(False)
+            self.run_button.setEnabled(True)
+            return False
+
+        try:
+            p = Path(self.out_dir).expanduser()
+            if not p.exists():
+                self.__add_log(f"Папка не существует: {p}")
+                return False
+            if not p.is_dir():
+                self.__add_log(f"Указан не каталог: {p}")
+                return False
+        except Exception as e:
+            self.__add_log(f"Нет доступа к каталогу '{self.out_dir}': {e}")
+            return False
+
+        return True
+
+    def __get_urls_from_field(self) -> list[str]:
+        raw = self.links_field.toPlainText()
+        return raw.splitlines()
+
+    def __on_worker_finished(self, msg: str) -> None:
+        self.__add_log(msg)
+        self.__add_log("Работа завершена!")
+        self.progress_bar.setVisible(False)
+        self.run_button.setEnabled(True)
+        self.__add_log("\n")
+
+    def __on_worker_error(self, msg: str) -> None:
+        self.__add_log(msg)
+        self.progress_bar.setVisible(False)
+        self.run_button.setEnabled(True)
+        self.__add_log("\n")
 
     def __add_log(self, message: str) -> None:
         self.log_field.appendPlainText(message)

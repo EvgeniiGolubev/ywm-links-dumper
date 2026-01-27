@@ -1,9 +1,10 @@
 from datetime import datetime
 from pathlib import Path
 from typing import Iterable, Dict
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook
 from openpyxl.styles import PatternFill
-from src.constants import XLSX_FIELDS, BAD_KEYWORDS
+from src.constants import XLSX_FIELDS, BAD_KEYWORDS, INDEX_FIELDS
+
 
 def write_xlsx(rows: Iterable[Dict], out_dir: str, host_domain: str) -> str:
     file_name = __make_file_name(host_domain)
@@ -32,6 +33,28 @@ def write_xlsx(rows: Iterable[Dict], out_dir: str, host_domain: str) -> str:
     wb.save(out_path)
 
     return f"Файл сохранён: {out_path.resolve()}"
+
+def write_indexation_xlsx(rows: Iterable[Dict], out_dir: str) -> str:
+    today = datetime.today().strftime("%Y-%m-%d")
+    out_path = Path(out_dir).expanduser() / f"indexation_{today}.xlsx"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Indexation"
+
+    ws.append(INDEX_FIELDS)
+
+    for row in rows:
+        ws.append([
+            row["url"],
+            row["google_index"],
+            row["yandex_index"],
+        ])
+
+    wb.save(out_path)
+
+    return f"Файл индексации сохранён: {out_path.resolve()}"
 
 def __make_file_name(host_domain: str) -> str:
     today = datetime.today().strftime("%Y-%m-%d")

@@ -1,5 +1,6 @@
 API_BASE = "https://api.webmaster.yandex.net/v4"
 XLSX_FIELDS = ["source_url", "destination_url", "discovery_date", "source_last_access_date"]
+INDEX_FIELDS = ["url", "google_index", "yandex_index"]
 BAD_KEYWORDS = [
     # adult
     "porn", "porno", "pornhub", "xvideos", "xnxx", "xxx",

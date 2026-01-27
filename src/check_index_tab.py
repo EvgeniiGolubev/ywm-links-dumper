@@ -136,15 +136,16 @@ class CheckIndexTab(QWidget):
 
     def __on_worker_finished(self, msg: str) -> None:
         self.__add_log(msg)
-        self.__add_log("Работа завершена!")
         self.progress_bar.setVisible(False)
         self.run_button.setEnabled(True)
+        self.links_field.setReadOnly(False)
         self.__add_log("\n")
 
     def __on_worker_error(self, msg: str) -> None:
         self.__add_log(msg)
         self.progress_bar.setVisible(False)
         self.run_button.setEnabled(True)
+        self.links_field.setReadOnly(False)
         self.__add_log("\n")
 
     def __add_log(self, message: str) -> None:

@@ -1,6 +1,7 @@
 .idea/
 .venv/
 build/
+pw_profile/
 .env
 __pycache__/
 *.pyc

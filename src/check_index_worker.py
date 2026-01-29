@@ -83,13 +83,13 @@ class CheckIndexWorker(QObject):
         return False
 
     def __check_yandex(self, p, url: str) -> bool:
-        search_url = f"https://yandex.ru/search/?text=url:{quote(url)}"
+        search_url = f"https://yandex.ru/search/?text=\"{quote(url)}\""
         attempt = 0
 
         while attempt < self.max_attempts_per_url:
             html = self.__query_search(search_url)
 
-            if html is None:
+            if html is None:  # Капча
                 if attempt >= 1: return False
                 self.__solve_captcha_in_visible_browser(p, search_url)
                 attempt += 1
@@ -101,13 +101,14 @@ class CheckIndexWorker(QObject):
 
             h = html.lower()
 
-            if "ничего не нашлось" in h:
+            if "ничего не нашлось" in h or "не найден" in h:
                 return False
 
-            if "serp-item" in h or "organic__url" in h:
+            if any(x in h for x in ["serp-item", "organic", "path", "favicons"]):
                 return True
 
             attempt += 1
+            time.sleep(1)
 
         return False
 
@@ -128,10 +129,10 @@ class CheckIndexWorker(QObject):
 
     def __parse_indexed_google(self, html: str) -> bool:
         h = html.lower()
-        # Признаки отсутствия в индексе
+
         if "did not match any documents" in h or "ничего не найдено" in h:
             return False
-            # Признаки наличия (id 'search', id 'rso' или статистика результатов)
+
         if 'id="search"' in h or 'id="rso"' in h or 'id="result-stats"' in h:
             return True
         return False
@@ -147,17 +148,14 @@ class CheckIndexWorker(QObject):
                 wait_until="domcontentloaded"
             )
 
-            # Ждем немного, чтобы JS успел отработать
             try:
                 page.wait_for_load_state("networkidle", timeout=6000)
             except:
                 pass
 
-            # ВАЖНО: Сначала проверяем на капчу
             if self.__is_captcha(page):
-                return None  # Сигнал воркеру открыть видимое окно
+                return None
 
-            # Если не капча, забираем контент
             for _ in range(2):
                 try:
                     return page.content()
@@ -173,11 +171,9 @@ class CheckIndexWorker(QObject):
         self.log.emit("!!! ОБНАРУЖЕНА КАПЧА !!!")
         self.log.emit("Закрываю фоновый поток и открываю окно...")
 
-        # 1. Закрываем текущий headless контекст, чтобы освободить профиль
         if self.context_headless:
             self.context_headless.close()
 
-        # 2. Открываем видимое окно
         context = self.__open_context(p, headless=False)
         page = context.new_page()
         try:
@@ -189,7 +185,6 @@ class CheckIndexWorker(QObject):
         finally:
             context.close()
 
-        # 3. Возвращаем фоновый режим
         self.log.emit("Возобновляю фоновую работу...")
         self.context_headless = self.__open_context(p, headless=True)
         self.page_headless = self.context_headless.new_page()

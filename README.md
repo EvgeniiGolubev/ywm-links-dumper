@@ -48,4 +48,4 @@
 
 ## Сборка в .exe
 ```bash
-pyinstaller --noconsole --onefile --name YWM_ExternalLinks --icon=assets/icon.ico --add-data "assets/icon.ico;assets" app.py
+pyinstaller --noconsole --onefile --name YWM_ExternalLinks --icon=assets/icon.ico --add-data "assets;assets" app.py

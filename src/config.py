@@ -1,7 +1,8 @@
 import configparser
+import sys
 from pathlib import Path
 
-APP_NAME = "YWM_ExternalLinks"
+APP_NAME = "SEO Tools"
 SETTINGS_FILENAME = "settings.ini"
 
 class Settings:
@@ -32,15 +33,19 @@ class Settings:
             setattr(self, attr_name, value)
 
     def __get_settings_path(self) -> Path:
-        documents = Path.home() / "Documents"
-        config_dir = documents / APP_NAME
+        config_dir = self.__get_base_dir() / "config"
         config_dir.mkdir(parents=True, exist_ok=True)
         return config_dir / SETTINGS_FILENAME
+
+    def __get_base_dir(self) -> Path:
+        if hasattr(sys, '_MEIPASS'):
+            return Path(sys.executable).parent
+        return Path(__file__).parent.parent
 
     def _create_default(self):
         self.config["DEFAULT"] = {
             "YWM_OAUTH_TOKEN": "",
-            "YWM_OUTPUT_DIR": str(Path.home() / "Desktop"),
+            "YWM_OUTPUT_DIR": str(Path.home()),
             "YWM_HOST_DOMAIN": "",
             "YWM_LIMIT": "100",
             "YWM_OFFSET": "0"

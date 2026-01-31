@@ -1,4 +1,6 @@
+import sys
 import time
+from pathlib import Path
 from urllib.parse import quote
 from PyQt6.QtCore import QObject, pyqtSignal
 from playwright.sync_api import sync_playwright
@@ -15,7 +17,6 @@ class CheckIndexWorker(QObject):
         self.out_dir = out_dir
         self.links = [x.strip() for x in links if x.strip()]
         self._is_running = True
-        self.profile_dir = "pw_profile"
         self.timeout_ms = 25000
         self.max_attempts_per_url = 2
         self.user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
@@ -83,7 +84,7 @@ class CheckIndexWorker(QObject):
         return False
 
     def __check_yandex(self, p, url: str) -> bool:
-        search_url = f"https://yandex.ru/search/?text=\"{quote(url)}\""
+        search_url = f"https://yandex.ru/search/?text=url:{quote(url)}"
         attempt = 0
 
         while attempt < self.max_attempts_per_url:
@@ -190,8 +191,22 @@ class CheckIndexWorker(QObject):
         self.page_headless = self.context_headless.new_page()
 
     def __open_context(self, p, headless: bool):
+        if hasattr(sys, '_MEIPASS'):
+            base_path = Path(sys.executable).parent
+        else:
+            base_path = Path(__file__).parent.parent
+
+        if hasattr(sys, '_MEIPASS'):
+            chrome_path = base_path / "chrome-win64" / "chrome.exe"
+        else:
+            chrome_dir = list((base_path / "pw-browsers").glob("chromium-*"))[0]
+            chrome_path = chrome_dir / "chrome-win64" / "chrome.exe"
+
+        user_data_dir = base_path / "pw_profile"
+
         return p.chromium.launch_persistent_context(
-            user_data_dir=self.profile_dir,
+            user_data_dir=str(user_data_dir),
+            executable_path=str(chrome_path),
             headless=headless,
             user_agent=self.user_agent,
             locale="ru-RU",

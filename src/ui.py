@@ -13,7 +13,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.settings = settings
 
-        self.setWindowTitle("YWM External Links")
+        self.setWindowTitle("SEO Tools")
         self.setMinimumSize(600, 400)
         self.setWindowIcon(QIcon(self.__resource_path("assets/icon.ico")))
 

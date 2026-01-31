@@ -2,6 +2,8 @@
 .venv/
 build/
 pw_profile/
+pw-browsers/
+config/
 .env
 __pycache__/
 *.pyc

@@ -33,7 +33,7 @@ SEO Tools – это мощная и легкая утилита для SEO-сп
   playwright install chromium
 ```
 
-## Сборка проекта
+### Сборка проекта
 ```bash
   pyinstaller --noconsole --onefile --name "SEO Tools" --icon=assets/icon.ico --add-data "assets;assets" app.py
 ```
